@@ -1,0 +1,48 @@
+body {
+    background-color: beige;
+}
+
+.main {
+    background-color: antiquewhite;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+}
+
+.game {
+    background-color: aquamarine;
+    padding: 2%;
+}
+
+.gameView {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    background-color: blueviolet;
+    height: 400px;
+    width: 400px;
+    margin: auto;
+}
+
+.gameColumn {
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+}
+
+.gameCell {
+    width: 35px;
+    height: 35px;
+    background-color: coral;
+}
+
+.gameCell:hover {
+    background-color: cornflowerblue;
+}
+
+.header {
+    background-color: aqua;
+    text-align: center;
+    padding: 5%;
+}
