@@ -25,9 +25,9 @@ body {
     margin: auto;
 }
 
-.gameColumn {
+.gameRow {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
     flex-direction: row;
 }
 

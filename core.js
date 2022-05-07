@@ -1,10 +1,19 @@
 function createMatrix (size) {
     const matrix = []
 
+    matrix.firstTurn = true
     matrix.size = size
     matrix.getCell = getCell.bind(matrix)
     matrix.getCellById = getCellById.bind(matrix)
     matrix.print = printMatrix.bind(matrix)
+    matrix.open = openCell.bind(matrix)
+    matrix.update = () => {
+        for(let row of matrix) {
+            for(let cell of row) {
+                updateCellTile(cell)
+            }
+        }
+    }
 
     let k = 0;
 
@@ -32,27 +41,78 @@ function createMatrix (size) {
 }
 
 function prepareMatrix(matrix) {
-    for(let i = 0; i < matrix.size; i++) {
+    const bombQuantity = Math.floor(matrix.size/2*matrix.size/2)
+    // const bombQuantity = size
+
+    for(let i = 0; i < bombQuantity; i++) {
         setRandomMine(matrix)
     }
 
-    for(let row of matrix) {
-        for(let cell of row) {
+    setMinesAround(matrix)
+}
 
+function gameOver() {
+    console.log('GAMEOVER')
+}
+
+
+function markCell(cell) {
+    if(cell.isFlag) {
+        cell.isFlag = false;
+    } else {
+        cell.isFlag = true
+    }
+
+    updateCellTile(cell)
+}
+
+function openCell(matrix, cell) {
+    if(!cell.isOpen && !cell.isFlag) {
+        cell.isOpen = true
+        updateCellTile(cell)
+
+        if(cell.isMine) {
+            gameOver()
+        } else {
+            for(let dx = - 1; dx <= 1; dx++) {
+                for(let dy = - 1; dy <= 1; dy++) {
+                    if(!(dx === 0 && dy === 0)) {
+
+                        let cll = matrix.getCell(cell.y+dy, cell.x+dx)
+
+                        if(cll !== undefined && !cll.isMine) {
+                            if(cll.minesAround === 0) {
+                                openCell(matrix, cll)
+                            } else {
+                                cll.isOpen = true
+                                updateCellTile(cll)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 function printMatrix() {
+    let matrix = ''
+
     for(let row of this) {
         for(let cell of row) {
             if(cell.isMine) {
-                console.log('X')
+                matrix += 'X'
+                matrix += ' '
             } else {
-                console.log('O')
+                matrix += cell.minesAround
+                matrix += ' '
             }
         }
+
+        matrix += '\n'
     }
+
+    console.log(matrix)
 }
 
 function getCell(x, y) {
@@ -114,107 +174,104 @@ function calculateMinesAround(matrix, x, y) {
 function setMinesAround(matrix) {
     for(let row of matrix) {
         for(let cell of row) {
-            cell.minesAround = getMinesAround(matrix, cell.x, cell.y)
+            cell.minesAround = calculateMinesAround(matrix, cell.y, cell.x)
         }
     }
 }
 
-// function matrixToHtml(matrix) {
-//     const gameField = document.createElement('div')
-//     gameField.classList.add('gameView')
-//
-//     for(let column of matrix) {
-//         const gameColumn = document.createElement('div')
-//         gameColumn.classList.add('gameColumn')
-//
-//         for(let cell of column) {
-//             const gameCell = document.createElement('div')
-//             gameCell.setAttribute('id', cell.id)
-//
-//             gameCell.addEventListener('onclick', () => console.log(cell.id))
-//
-//             gameCell.classList.add('gameCell')
-//
-//             gameColumn.appendChild(gameCell)
-//         }
-//
-//         gameField.appendChild(gameColumn)
-//     }
-//
-//     return gameField
-// }
+
 
 function matrixToHtml(matrix) {
     const gameElement = document.createElement('div')
-    gameElement.classList.add('sapper')
+    gameElement.classList.add('game')
 
-    for(let column of matrix) {
-        const columnElement = document.createElement('div')
-        columnElement.classList.add('column')
+    for(let row of matrix) {
+        const rowElement = document.createElement('div')
+        rowElement.classList.add('gameRow')
 
-        for(let cell of column) {
+        for(let cell of row) {
             const imgElement = document.createElement('img')
 
-            if(cell.isMine) {
-                imgElement.src = 'Minesweeper_LAZARUS_61x61_mine.png'
-            } else {
-                switch(cell.minesAround) {
-                    case 0: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_0.png'
-                        break
-                    }
-                    case 1: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_1.png'
-                        break
-                    }
-                    case 2: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_2.png'
-                        break
-                    }
-                    case 3: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_3.png'
-                        break
-                    }
-                    case 4: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_4.png'
-                        break
-                    }
-                    case 5: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_5.png'
-                        break
-                    }
-                    case 6: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_6.png'
-                        break
-                    }
-                    case 7: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_7.png'
-                        break
-                    }
-                    case 8: {
-                        imgElement.src = 'Minesweeper_LAZARUS_61x61_8.png'
-                        break
-                    }
+            imgElement.onclick = () => {
+                if(matrix.firstTurn) {
+                    prepareMatrix(matrix)
+                    matrix.firstTurn = false
                 }
+
+                openCell(matrix, cell)
             }
+            imgElement.oncontextmenu = (e) => {
+                e.preventDefault()
+                markCell(cell)
+            }
+            imgElement.classList.add('gameCell')
+            imgElement.setAttribute('id', cell.id)
 
-            // if(!cell.isOpen) {
-            //     imgElement.src = 'Minesweeper_LAZARUS_61x61_unexplored.png'
-            // } else {
-            //
-            // }
-
-            columnElement.appendChild(imgElement)
+            rowElement.appendChild(imgElement)
         }
 
-        gameElement.appendChild(columnElement)
+        gameElement.appendChild(rowElement)
     }
 
     return gameElement
 }
 
+function updateCellTile(cell) {
+    const cellElement = document.getElementById(cell.id)
+
+    if(!cell.isOpen) {
+        if(cell.isFlag) {
+            cellElement.src = 'Minesweeper_LAZARUS_61x61_flag.png'
+        } else {
+            cellElement.src = 'Minesweeper_LAZARUS_61x61_unexplored.png'
+        }
+    } else {
+        if(cell.isMine) {
+            cellElement.src = 'Minesweeper_LAZARUS_61x61_mine.png'
+        } else {
+            switch(cell.minesAround) {
+                case 0: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_0.png'
+                    break
+                }
+                case 1: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_1.png'
+                    break
+                }
+                case 2: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_2.png'
+                    break
+                }
+                case 3: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_3.png'
+                    break
+                }
+                case 4: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_4.png'
+                    break
+                }
+                case 5: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_5.png'
+                    break
+                }
+                case 6: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_6.png'
+                    break
+                }
+                case 7: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_7.png'
+                    break
+                }
+                case 8: {
+                    cellElement.src = 'Minesweeper_LAZARUS_61x61_8.png'
+                    break
+                }
+            }
 
 
+        }
+    }
+}
 
 
 
