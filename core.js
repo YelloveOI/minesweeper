@@ -2,6 +2,7 @@ function createMatrix (size) {
     const matrix = []
 
     matrix.firstTurn = true
+    matrix.flagsQuantity = size
     matrix.size = size
     matrix.getCell = getCell.bind(matrix)
     matrix.getCellById = getCellById.bind(matrix)
@@ -41,7 +42,7 @@ function createMatrix (size) {
 }
 
 function prepareMatrix(matrix) {
-    const bombQuantity = Math.floor(matrix.size/2*matrix.size/2)
+    const bombQuantity = Math.floor(matrix.size/3*matrix.size/3)
     // const bombQuantity = size
 
     for(let i = 0; i < bombQuantity; i++) {
@@ -51,16 +52,18 @@ function prepareMatrix(matrix) {
     setMinesAround(matrix)
 }
 
-function gameOver() {
+function gameOver(isWin) {
+    //TODO
     console.log('GAMEOVER')
 }
 
 
-function markCell(cell) {
-    if(cell.isFlag) {
-        cell.isFlag = false;
-    } else {
-        cell.isFlag = true
+function markCell(matrix, cell) {
+    cell.isFlag = !cell.isFlag;
+    matrix.flagsQuantity--;
+
+    if(matrix.flagsQuantity === 0) {
+        gameOver(true)
     }
 
     updateCellTile(cell)
@@ -72,7 +75,7 @@ function openCell(matrix, cell) {
         updateCellTile(cell)
 
         if(cell.isMine) {
-            gameOver()
+            gameOver(false)
         } else {
             for(let dx = - 1; dx <= 1; dx++) {
                 for(let dy = - 1; dy <= 1; dy++) {
@@ -135,7 +138,7 @@ function getRandomFreeCell(matrix) {
 
     for(let column of matrix) {
         for(let cell of column) {
-            if(!cell.isMine) {
+            if(!cell.isMine && !cell.isOpen) {
                 freeCells.push(cell)
             }
         }
@@ -194,15 +197,36 @@ function matrixToHtml(matrix) {
 
             imgElement.onclick = () => {
                 if(matrix.firstTurn) {
+                    cell.isOpen = true
                     prepareMatrix(matrix)
+                    updateCellTile(cell)
                     matrix.firstTurn = false
+
+                    for(let dx = - 1; dx <= 1; dx++) {
+                        for(let dy = - dx; dy <= 1; dy++) {
+                            if(!(dx === 0 && dy === 0)) {
+
+                                let cll = matrix.getCell(cell.y+dy, cell.x+dx)
+
+                                if(cll !== undefined && !cll.isMine) {
+                                    if(cll.minesAround === 0) {
+                                        openCell(matrix, cll)
+                                    } else {
+                                        cll.isOpen = true
+                                        updateCellTile(cll)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 openCell(matrix, cell)
             }
+
             imgElement.oncontextmenu = (e) => {
                 e.preventDefault()
-                markCell(cell)
+                markCell(matrix, cell)
             }
             imgElement.classList.add('gameCell')
             imgElement.setAttribute('id', cell.id)
