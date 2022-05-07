@@ -1,12 +1,18 @@
-const matrix = getMatrix(10, 10)
+const size = 10
 
-for(let i = 0; i < 10; i++) {
-    setRandomMine(matrix)
-}
+const matrix = createMatrix(size)
 
-setMinesAround(matrix)
+console.log(matrix.print)
+matrix.print()
 
-const gameField = matrixToHtml(matrix)
-const gameElement = document.querySelector('.game')
-
-gameElement.appendChild(gameField)
+// for(let i = 0; i < size; i++) {
+//     setRandomMine(matrix)
+// }
+//
+// setMinesAround(matrix)
+//
+// const gameField = matrixToHtml(matrix)
+// const gameElement = document.querySelector('.game')
+//
+// gameElement.appendChild(gameField)
+//
