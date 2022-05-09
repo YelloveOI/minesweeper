@@ -291,8 +291,6 @@ function updateCellTile(cell) {
                     break
                 }
             }
-
-
         }
     }
 }
