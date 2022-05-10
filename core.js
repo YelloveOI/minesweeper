@@ -1,17 +1,30 @@
 function createMatrix (size) {
     const matrix = []
 
-    matrix.firstTurn = true
-    matrix.flagsQuantity = size
+    matrix.gameover = false
     matrix.size = size
+    matrix.closeCellsQuantity = size*size
+    matrix.firstTurn = true
     matrix.getCell = getCell.bind(matrix)
     matrix.getCellById = getCellById.bind(matrix)
     matrix.print = printMatrix.bind(matrix)
     matrix.open = openCell.bind(matrix)
+    matrix.flagsQuantity = calculateBombQuantity(size)
     matrix.update = () => {
         for(let row of matrix) {
             for(let cell of row) {
                 updateCellTile(cell)
+            }
+        }
+    }
+    matrix.showBombs = () => {
+        for(let row of matrix) {
+            for(let cell of row) {
+                if(cell.isMine) {
+                    cell.isFlag = false
+                    cell.isOpen = true
+                    updateCellTile(cell)
+                }
             }
         }
     }
@@ -42,8 +55,7 @@ function createMatrix (size) {
 }
 
 function prepareMatrix(matrix) {
-    const bombQuantity = Math.floor(matrix.size/3*matrix.size/3)
-    // const bombQuantity = size
+    const bombQuantity = calculateBombQuantity(matrix.size)
 
     for(let i = 0; i < bombQuantity; i++) {
         setRandomMine(matrix)
@@ -52,43 +64,75 @@ function prepareMatrix(matrix) {
     setMinesAround(matrix)
 }
 
-function gameOver(isWin) {
-    //TODO
-    console.log('GAMEOVER')
+function calculateBombQuantity(size) {
+    return Math.floor(size/3*size/3)
+}
+
+function gameOver(matrix, isWin) {
+    console.log('gameover', isWin)
+    matrix.gameover = true
+    matrix.showBombs()
+    alert('GAMEOVER', isWin)
 }
 
 
 function markCell(matrix, cell) {
-    cell.isFlag = !cell.isFlag;
-    matrix.flagsQuantity--;
+    if(!matrix.gameover) {
+        if(!cell.isOpen) {
+            if(cell.isFlag) {
+                cell.isFlag = false
+                matrix.flagsQuantity++
+            } else {
+                cell.isFlag = true
+                matrix.flagsQuantity--
 
-    if(matrix.flagsQuantity === 0) {
-        gameOver(true)
+                if(matrix.closeCellsQuantity === calculateBombQuantity(size) && matrix.flagsQuantity === 0) {
+                    gameOver(matrix, true)
+                }
+            }
+
+            updateFlagsQuantity(matrix)
+            updateCellTile(cell)
+        }
     }
+}
 
-    updateCellTile(cell)
+function updateFlagsQuantity(matrix) {
+    const flagQuantityElem = document.querySelector('.flag-quantity')
+    flagQuantityElem.innerHTML = matrix.flagsQuantity
 }
 
 function openCell(matrix, cell) {
-    if(!cell.isOpen && !cell.isFlag) {
-        cell.isOpen = true
-        updateCellTile(cell)
+    if(!matrix.gameover) {
+        if(!cell.isOpen && !cell.isFlag) {
+            cell.isOpen = true
+            matrix.closeCellsQuantity--
 
-        if(cell.isMine) {
-            gameOver(false)
-        } else {
-            for(let dx = - 1; dx <= 1; dx++) {
-                for(let dy = - 1; dy <= 1; dy++) {
-                    if(!(dx === 0 && dy === 0)) {
+            if(matrix.closeCellsQuantity === calculateBombQuantity(size)) {
+                gameOver(matrix,true)
+            }
 
-                        let cll = matrix.getCell(cell.y+dy, cell.x+dx)
+            updateCellTile(cell)
 
-                        if(cll !== undefined && !cll.isMine) {
-                            if(cll.minesAround === 0) {
-                                openCell(matrix, cll)
-                            } else {
-                                cll.isOpen = true
-                                updateCellTile(cll)
+            if(cell.isMine) {
+                gameOver(matrix,false)
+            } else {
+                for(let dx = - 1; dx <= 1; dx++) {
+                    for(let dy = - 1; dy <= 1; dy++) {
+                        if(!(dx === 0 && dy === 0)) {
+
+                            let cll = matrix.getCell(cell.y+dy, cell.x+dx)
+
+                            if(cll !== undefined && !cll.isMine) {
+                                if(cll.minesAround === 0) {
+                                    openCell(matrix, cll)
+                                } else {
+                                    if(!cll.isOpen) {
+                                        matrix.closeCellsQuantity--
+                                        cll.isOpen = true
+                                        updateCellTile(cll)
+                                    }
+                                }
                             }
                         }
                     }
@@ -183,63 +227,6 @@ function setMinesAround(matrix) {
 }
 
 
-
-function matrixToHtml(matrix) {
-    const gameElement = document.createElement('div')
-    gameElement.classList.add('game')
-
-    for(let row of matrix) {
-        const rowElement = document.createElement('div')
-        rowElement.classList.add('gameRow')
-
-        for(let cell of row) {
-            const imgElement = document.createElement('img')
-
-            imgElement.onclick = () => {
-                if(matrix.firstTurn) {
-                    cell.isOpen = true
-                    prepareMatrix(matrix)
-                    updateCellTile(cell)
-                    matrix.firstTurn = false
-
-                    for(let dx = - 1; dx <= 1; dx++) {
-                        for(let dy = - dx; dy <= 1; dy++) {
-                            if(!(dx === 0 && dy === 0)) {
-
-                                let cll = matrix.getCell(cell.y+dy, cell.x+dx)
-
-                                if(cll !== undefined && !cll.isMine) {
-                                    if(cll.minesAround === 0) {
-                                        openCell(matrix, cll)
-                                    } else {
-                                        cll.isOpen = true
-                                        updateCellTile(cll)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                openCell(matrix, cell)
-            }
-
-            imgElement.oncontextmenu = (e) => {
-                e.preventDefault()
-                markCell(matrix, cell)
-            }
-            imgElement.classList.add('gameCell')
-            imgElement.setAttribute('id', cell.id)
-
-            rowElement.appendChild(imgElement)
-        }
-
-        gameElement.appendChild(rowElement)
-    }
-
-    return gameElement
-}
-
 function updateCellTile(cell) {
     const cellElement = document.getElementById(cell.id)
 
@@ -293,6 +280,77 @@ function updateCellTile(cell) {
             }
         }
     }
+}
+
+function rowToHtml() {
+    const rowElement = document.createElement('div')
+    rowElement.classList.add('gameRow')
+
+    return rowElement
+}
+
+function cellToHtml(matrix, cell) {
+    const cellElement = document.createElement('img')
+
+    cellElement.onclick = () => {
+        if(matrix.firstTurn) {
+            cell.isOpen = true
+            matrix.firstTurn = false
+            prepareMatrix(matrix)
+            matrix.closeCellsQuantity--
+            updateCellTile(cell)
+
+            for(let dx = - 1; dx <= 1; dx++) {
+                for(let dy = - dx; dy <= 1; dy++) {
+                    if(!(dx === 0 && dy === 0)) {
+
+                        let cll = matrix.getCell(cell.y+dy, cell.x+dx)
+
+                        if(cll !== undefined && !cll.isMine) {
+                            if(cll.minesAround === 0) {
+                                openCell(matrix, cll)
+                            } else {
+                                cll.isOpen = true
+                                matrix.closeCellsQuantity--
+                                updateCellTile(cll)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        openCell(matrix, cell)
+    }
+
+    cellElement.oncontextmenu = (e) => {
+        e.preventDefault()
+        markCell(matrix, cell)
+    }
+
+    cellElement.classList.add('gameCell')
+    cellElement.setAttribute('id', cell.id)
+
+    return cellElement
+}
+
+function matrixToHtml(matrix) {
+    const gameElement = document.createElement('div')
+    gameElement.classList.add('game')
+
+    for(let row of matrix) {
+        const rowElement = rowToHtml()
+
+        for(let cell of row) {
+            const imgElement = cellToHtml(matrix, cell)
+
+            rowElement.appendChild(imgElement)
+        }
+
+        gameElement.appendChild(rowElement)
+    }
+
+    return gameElement
 }
 
 
