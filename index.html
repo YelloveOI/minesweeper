@@ -1,14 +1,26 @@
-<html>
+<!doctype html>
+<html lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
         <title>Minesweeper</title>
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="styles/styles.css">
+        <link rel="stylesheet" href="styles/modal.css">
+        <script src='js/sounds.js'></script>
     </head>
 
-    <body>
-        <div class="main">
-            <div class="header">MineSweeper</div>
 
+
+    <body>
+        <div class="popup hidden">
+            <div class="popup-overlay">
+                <div class="popup-window">
+                    <div class="popup-text">_BLANK_</div>
+                    <div class="popup-restart">RESTART</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
             <div class="bar">
                 <div class="dropdown">
                     <button class="dropbtn">Choose Level</button>
@@ -20,21 +32,18 @@
                 </div>
 
                 <div class="flag-block">
-                    <img class="flag-img" src="Minesweeper_LAZARUS_61x61_flag.png" alt="_FLAG_">
+                    <img class="flag-img" src="./tiles/flag.svg" alt="_FLAG_">
                     <div class="flag-quantity">0</div>
                 </div>
 
                 <div class="timer-block">
-                    <img class="timer-img" src="icons8-timer-48.png" alt="_TIMER_">
+                    <img class="timer-img" src="./tiles/clock.svg" alt="_TIMER_">
                     <div class="timer-digits">0</div>
                 </div>
-            </div>
-
-            <div class="game">
             </div>
         </div>
     </body>
 
-    <script src="core.js"></script>
-    <script src="script.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/script.js"></script>
 </html>
